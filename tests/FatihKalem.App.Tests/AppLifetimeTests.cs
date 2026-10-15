@@ -60,6 +60,25 @@ public sealed class AppLifetimeTests : IDisposable
     }
 
     [Fact]
+    public void AcquireOrSignal_FirstCallAcquires()
+    {
+        using var instance = AppLifetime.AcquireOrSignal(LockPath);
+        Assert.NotNull(instance);
+    }
+
+    [Fact]
+    public void AcquireOrSignal_WhenAlreadyRunning_SignalsFirstAndReturnsNull()
+    {
+        // the second launch must not start any UI: it only taps the first one on the shoulder
+        using var first = AppLifetime.AcquireOrSignal(LockPath)!;
+        using var activated = new ManualResetEventSlim();
+        first.ActivateRequested += activated.Set;
+
+        Assert.Null(AppLifetime.AcquireOrSignal(LockPath));
+        Assert.True(activated.Wait(TimeSpan.FromSeconds(5)), "first instance was not told to come forward");
+    }
+
+    [Fact]
     public void SignalExisting_WithoutRunningInstance_ReturnsFalse() =>
         Assert.False(SingleInstance.SignalExisting(LockPath, timeoutMs: 200));
 

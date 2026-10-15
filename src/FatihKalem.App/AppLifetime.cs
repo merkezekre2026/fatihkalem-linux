@@ -12,6 +12,17 @@ public static class AppLifetime
         new(args.Any(a => a.Equals("/PreLoad", StringComparison.OrdinalIgnoreCase)
                           || a.Equals("--preload", StringComparison.OrdinalIgnoreCase)));
 
+    /// <summary>
+    /// Becomes the running instance, or, if one already runs, asks it to come forward and returns <c>null</c>.
+    /// Called before any UI exists, so a second launch exits without ever starting the toolkit.
+    /// </summary>
+    public static SingleInstance? AcquireOrSignal(string lockPath)
+    {
+        var instance = SingleInstance.TryAcquire(lockPath);
+        if (instance is null) SingleInstance.SignalExisting(lockPath);
+        return instance;
+    }
+
     /// <summary>One lock per user: the runtime directory when there is one, else the temp directory.</summary>
     public static string DefaultLockPath => Path.Combine(
         Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR") is { Length: > 0 } runtime ? runtime : Path.GetTempPath(),

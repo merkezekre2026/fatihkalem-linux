@@ -8,8 +8,6 @@ namespace FatihKalem.App;
 
 public partial class App : Application
 {
-    private SingleInstance? _instance;
-
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()
@@ -21,26 +19,18 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private void StartBoard(IClassicDesktopStyleApplicationLifetime desktop)
+    private static void StartBoard(IClassicDesktopStyleApplicationLifetime desktop)
     {
         var options = AppLifetime.ParseArgs(desktop.Args ?? []);
-        var lockPath = AppLifetime.DefaultLockPath;
-
-        _instance = SingleInstance.TryAcquire(lockPath);
-        if (_instance is null)
-        {
-            // Another board is already running: ask it to come forward and leave.
-            SingleInstance.SignalExisting(lockPath);
-            desktop.Shutdown();
-            return;
-        }
-
         var shell = new AppShell(AppPaths.Default);
-        _instance.ActivateRequested += () => Dispatcher.UIThread.Post(shell.Activate);
+
+        // a later launch finds the lock taken and asks us to come forward (see Program.Main)
+        if (Program.Instance is { } instance)
+            instance.ActivateRequested += () => Dispatcher.UIThread.Post(shell.Activate);
+
         shell.ExitRequested += () => desktop.Shutdown();
         shell.Window.Closed += (_, _) => desktop.Shutdown();
         desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-        desktop.Exit += (_, _) => _instance.Dispose();
 
         // /PreLoad keeps the board hidden until a later launch asks for it.
         if (!options.PreLoad) shell.Activate();
