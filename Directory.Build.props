@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <!-- Keep bin/obj out of OneDrive on Windows -->
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(LOCALAPPDATA)\FatihKalem\artifacts</ArtifactsPath>
+  </PropertyGroup>
+</Project>
