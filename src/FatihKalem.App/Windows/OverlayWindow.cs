@@ -24,6 +24,7 @@ public sealed class OverlayWindow : Window
 {
     private readonly IInputRegion _region;
     private readonly List<Control> _interactive = [];
+    private readonly Dictionary<Control, EventHandler> _layoutHandlers = new();
     private InputMode _mode = InputMode.Pen;
     private IReadOnlyList<PixelRect>? _lastRects;
 
@@ -81,10 +82,19 @@ public sealed class OverlayWindow : Window
     public void RegisterInteractive(Control control)
     {
         _interactive.Add(control);
-        control.LayoutUpdated += (_, _) =>
+        EventHandler handler = (_, _) =>
         {
             if (_mode == InputMode.Hand) UpdateInputRegion();
         };
+        _layoutHandlers[control] = handler;
+        control.LayoutUpdated += handler;
+        if (_mode == InputMode.Hand) UpdateInputRegion();
+    }
+
+    public void UnregisterInteractive(Control control)
+    {
+        if (!_interactive.Remove(control)) return;
+        if (_layoutHandlers.Remove(control, out var handler)) control.LayoutUpdated -= handler;
         if (_mode == InputMode.Hand) UpdateInputRegion();
     }
 
