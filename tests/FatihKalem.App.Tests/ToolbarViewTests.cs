@@ -141,6 +141,43 @@ public sealed class ToolbarViewTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void Buttons_ShowNoTooltips_ButAreNamedForAccessibility()
+    {
+        // On X11 (seen under WSLg) a click that follows a hover long enough to open the tooltip popup is
+        // swallowed. A board must take the click, so the toolbar describes buttons by automation name only.
+        var (vm, view, _) = Make();
+        vm.AddFavorite("Size2");
+        // check boxes are Buttons too; they are named by their own label text
+        var buttons = view.GetVisualDescendants().OfType<Button>().Where(b => b is not Avalonia.Controls.Primitives.ToggleButton).ToList();
+        Assert.True(buttons.Count > 30);
+        Assert.All(buttons, b => Assert.Null(ToolTip.GetTip(b)));
+        Assert.All(buttons.Where(b => b.Name != "Close"), b =>
+            Assert.False(string.IsNullOrWhiteSpace(Avalonia.Automation.AutomationProperties.GetName(b)), $"{b.Name} has no automation name"));
+    }
+
+    [AvaloniaFact]
+    public void SettingsButton_TogglesThePanel()
+    {
+        var (_, view, _) = Make();
+        var check = view.GetVisualDescendants().OfType<CheckBox>().First(c => c.Name == "CloseConfirmation");
+        Assert.False(check.IsEffectivelyVisible);
+        Click(view, "Settings");
+        Assert.True(check.IsEffectivelyVisible);
+        Click(view, "Settings");
+        Assert.False(check.IsEffectivelyVisible);
+    }
+
+    [AvaloniaFact]
+    public void ColorPickerButton_TogglesTheColourChart()
+    {
+        var (_, view, _) = Make();
+        var chart = view.GetVisualDescendants().OfType<Image>().First(i => i.Name == "Cartela");
+        Assert.False(chart.IsEffectivelyVisible);
+        Click(view, "ColorPicker");
+        Assert.True(chart.IsEffectivelyVisible);
+    }
+
+    [AvaloniaFact]
     public void HeaderDrag_MovesToolbar_AndSavesPosition()
     {
         var (vm, view, window) = Make();

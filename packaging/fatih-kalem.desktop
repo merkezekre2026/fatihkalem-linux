@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Fatih Kalem
+Comment=Akıllı tahta kalem ve çizim uygulaması
+Exec=FatihKalem
+Icon=fatih-kalem
+Categories=Graphics;Education;
+Terminal=false
+StartupWMClass=FatihKalem

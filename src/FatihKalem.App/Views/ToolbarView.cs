@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -296,7 +297,7 @@ public sealed class ToolbarView : Border
             var remove = new MenuItem { Header = "Favorilerden kaldır" };
             remove.Click += (_, _) => _vm.RemoveFavorite(name);
             button.ContextMenu = new ContextMenu { ItemsSource = new[] { remove } };
-            ToolTip.SetTip(button, name);
+            AutomationProperties.SetName(button, name);
             _favorites.Children.Add(button);
         }
     }
@@ -319,7 +320,7 @@ public sealed class ToolbarView : Border
             add.Click += (_, _) => _vm.AddFavorite(favorite);
             button.ContextMenu = new ContextMenu { ItemsSource = new[] { add } };
         }
-        ToolTip.SetTip(button, tip);
+        AutomationProperties.SetName(button, tip);
         return button;
     }
 

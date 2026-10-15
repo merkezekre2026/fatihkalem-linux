@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -107,7 +108,7 @@ public sealed class LibraryPickerView : Border
             Margin = new Thickness(2),
             Content = new Image { Source = thumbnail, Width = ThumbnailWidth, Stretch = Stretch.Uniform },
         };
-        ToolTip.SetTip(button, entry.Name);
+        AutomationProperties.SetName(button, entry.Name);
         button.Click += (_, _) => Pick(entry);
         return button;
     }
