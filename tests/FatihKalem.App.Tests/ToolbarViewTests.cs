@@ -4,6 +4,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using FatihKalem.App.Controls;
 using FatihKalem.App.ViewModels;
@@ -69,6 +70,19 @@ public sealed class ToolbarViewTests : IDisposable
         Click(view, "Color4");
         Assert.Equal((PenKind.Highlighter, 0xFFFFFF01u), (_tool.Pen, _tool.Argb));
         Assert.Equal((byte)4, vm.Settings.ColorNo);
+    }
+
+    [AvaloniaFact]
+    public void ColourSelection_IsHighlightedImmediately()
+    {
+        var (_, view, _) = Make();
+        bool Highlighted(string name) => Find(view, name).Background is ISolidColorBrush { Color.A: > 0 };
+
+        Assert.True(Highlighted("Color2"));   // default: blue (original ColorNo=2)
+        Assert.False(Highlighted("Color4"));
+        Click(view, "Color4");
+        Assert.True(Highlighted("Color4"));
+        Assert.False(Highlighted("Color2"));
     }
 
     [AvaloniaFact]

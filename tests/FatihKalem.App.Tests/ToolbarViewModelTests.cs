@@ -256,6 +256,36 @@ public sealed class ToolbarViewModelTests : IDisposable
     }
 
     [Fact]
+    public void SettingsSaveFailure_DoesNotThrow_AndTheToolStillChanges()
+    {
+        // the settings folder cannot be created because a FILE sits where the folder should be
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "blocker"), "x");
+        var vm = new ToolbarViewModel(_tool, _doc,
+            new SettingsStore(Path.Combine(_dir, "blocker", "settings.json")), new Autostart(AutostartDir));
+
+        vm.SelectSize(5);
+        vm.SelectPen(PenKind.Marker, 3);
+
+        Assert.Equal(5, _tool.SizeLevel);
+        Assert.Equal(PenKind.Marker, _tool.Pen);
+        Assert.Equal((byte)5, vm.Settings.InkSize); // in-memory state is kept
+    }
+
+    [Fact]
+    public void AutoStartFailure_DoesNotThrow_AndIsReported()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(Path.Combine(_dir, "blocker"), "x");
+        var vm = new ToolbarViewModel(_tool, _doc, new SettingsStore(SettingsPath),
+            new Autostart(Path.Combine(_dir, "blocker", "autostart")));
+
+        Assert.False(vm.SetAutoStart(true, "/opt/x"));
+        Assert.False(vm.Settings.AutoStart);
+        Assert.True(vm.SetAutoStart(false, "/opt/x")); // removing nothing is not a failure
+    }
+
+    [Fact]
     public void SettingsToggles_Persist()
     {
         var vm = Make();

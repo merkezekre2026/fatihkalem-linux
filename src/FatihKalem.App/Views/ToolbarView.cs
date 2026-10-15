@@ -131,6 +131,7 @@ public sealed class ToolbarView : Border
 
         vm.ModeChanged += Refresh;
         vm.HistoryChanged += Refresh;
+        vm.SettingsChanged += Refresh;
         vm.FavoritesChanged += RebuildFavorites;
         vm.Tool.Changed += Refresh;
         RebuildFavorites();
@@ -173,7 +174,16 @@ public sealed class ToolbarView : Border
     {
         var s = _vm.Settings;
         var autostart = new CheckBox { Name = "AutoStart", Content = "Oturum açılışında başlat", IsChecked = s.AutoStart };
-        autostart.IsCheckedChanged += (_, _) => _vm.SetAutoStart(autostart.IsChecked == true, Autostart.ResolveExecPath());
+        var reverting = false;
+        autostart.IsCheckedChanged += (_, _) =>
+        {
+            if (reverting) return;
+            var wanted = autostart.IsChecked == true;
+            if (_vm.SetAutoStart(wanted, Autostart.ResolveExecPath())) return;
+            reverting = true; // the entry could not be written: show the real state again
+            autostart.IsChecked = !wanted;
+            reverting = false;
+        };
         var confirm = new CheckBox { Name = "CloseConfirmation", Content = "Kapatırken onay iste", IsChecked = s.IsCloseConfirmationEnabled };
         confirm.IsCheckedChanged += (_, _) => _vm.SetCloseConfirmation(confirm.IsChecked == true);
         var arrows = new CheckBox { Name = "SideArrows", Content = "Yan okları göster", IsChecked = s.IsSideArrowsEnabled };

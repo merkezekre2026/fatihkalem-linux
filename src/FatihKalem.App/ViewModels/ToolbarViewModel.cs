@@ -36,6 +36,9 @@ public sealed class ToolbarViewModel
     public event Action? LibraryRequested;
     public event Action? BackgroundRequested;
 
+    /// <summary>Fires after any setting (including the current pen colour) changed.</summary>
+    public event Action? SettingsChanged;
+
     /// <summary>Fires when undo/redo availability may have changed.</summary>
     public event Action? HistoryChanged;
 
@@ -144,11 +147,20 @@ public sealed class ToolbarViewModel
         Run(favorites[index]);
     }
 
-    public void SetAutoStart(bool enabled, string execPath)
+    /// <returns><c>false</c> if the autostart entry could not be written or removed; the setting is then left unchanged.</returns>
+    public bool SetAutoStart(bool enabled, string execPath)
     {
-        if (enabled) _autostart.Enable(execPath, preload: false);
-        else _autostart.Disable();
+        try
+        {
+            if (enabled) _autostart.Enable(execPath, preload: false);
+            else _autostart.Disable();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
         Update(s => s with { AutoStart = enabled });
+        return true;
     }
 
     public void SetCloseConfirmation(bool enabled) => Update(s => s with { IsCloseConfirmationEnabled = enabled });
@@ -216,6 +228,15 @@ public sealed class ToolbarViewModel
     private void Update(Func<AppSettings, AppSettings> change)
     {
         _settings = change(_settings);
-        _store.Save(_settings);
+        try
+        {
+            _store.Save(_settings);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // Settings are a convenience: with an unwritable home folder the board keeps working
+            // and simply forgets its choices at exit.
+        }
+        SettingsChanged?.Invoke();
     }
 }
